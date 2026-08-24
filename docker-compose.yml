@@ -1,0 +1,28 @@
+services:
+  codex_agent_sandbox:
+    build:
+      context: .
+      args:
+        HOST_UID: ${HOST_UID:-1000}
+        HOST_GID: ${HOST_GID:-1000}
+    container_name: codex_agent_sandbox
+    volumes:
+      - ./workspace:/workspace
+      # Конфиг Codex CLI (аналогичная структура, свой домашний каталог)
+      - ./codex-config:/home/agent/.codex
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+    networks:
+      - agent-net
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 4G
+
+networks:
+  agent-net:
+    driver: bridge
