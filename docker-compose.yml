@@ -6,12 +6,20 @@ services:
         HOST_UID: ${HOST_UID:-1000}
         HOST_GID: ${HOST_GID:-1000}
     container_name: codex_agent_sandbox
+    privileged: true
     volumes:
       - ./workspace:/workspace
       # Конфиг Codex CLI (аналогичная структура, свой домашний каталог)
       - ./codex-config:/home/agent/.codex
+      - codex-docker-data:/var/lib/docker
     environment:
-      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      DOCKER_HOST: unix:///var/run/docker.sock
+    ports:
+      - "0.0.0.0:80:80"
+      - "0.0.0.0:443:443"
+      - "0.0.0.0:443:443/udp"
+      - "0.0.0.0:8080:8080"
     stdin_open: true
     tty: true
     restart: unless-stopped
@@ -26,3 +34,6 @@ services:
 networks:
   agent-net:
     driver: bridge
+
+volumes:
+  codex-docker-data:
