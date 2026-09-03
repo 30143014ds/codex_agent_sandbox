@@ -1,0 +1,15 @@
+# Main Codex agent / orchestrator.
+# Terra is strong enough to understand and coordinate most engineering work
+# without paying Sol cost for every parent-agent turn.
+model = "gpt-5.6-terra"
+model_reasoning_effort = "high"
+
+[agents]
+enabled = true
+
+# Maximum simultaneously active subagents.
+max_concurrent_threads_per_session = 3
+
+# Fallback for subagents spawned without a specific custom role/model.
+default_subagent_model = "gpt-5.6-luna"
+default_subagent_reasoning_effort = "medium"

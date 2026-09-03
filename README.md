@@ -12,8 +12,15 @@
 ├── docker-compose.yml      # сервис claude_dev_agent: тома проекта, конфигов агентов, лимиты ресурсов
 ├── .devcontainer/
 │   └── devcontainer.json   # ссылается на тот же docker-compose.yml для VS Code Remote
+├── codex_dev_md/
+│   └── AGENT.md        #инструкции агенту
+│   └── config.toml     #конфиг агента
+│   └── scout.toml        #инструкции субагенту скауту
+│   └── worker.toml        #инструкции субагенту воркеру
+│   └── architect.toml       #инструкции субагенту архитектору
 ├── env.example         # шаблон переменных окружения (переименовать в .env.example)
 ├── setup.sh                # проверка Docker/Compose + сборка + запуск headless
+├── dev_agent_setup.sh      # скрипт по настройке субагентов для агента-разработчика
 ├── gitignore           # переименовать в .gitignore
 ├── workspace/               # код проекта — единственное, что видят агенты
 └── codex-config/            # конфиг и сессия Codex CLI (bind mount, не в git)
@@ -27,6 +34,7 @@ git clone git@github.com:30143014ds/codex_agent_sandbox.git codex_agent_sandbox
 cd codex_agent_sandbox
 cp .env.example .env      # впишите нужные ключи/токены
 chmod +x setup.sh
+chmod +x dev_agent_setup.sh
 ./setup.sh
 ```
 
