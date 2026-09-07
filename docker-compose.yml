@@ -12,6 +12,7 @@ services:
       # Конфиг Codex CLI (аналогичная структура, свой домашний каталог)
       - ./codex-config:/home/agent/.codex
       - codex-docker-data:/var/lib/docker
+      - ssh-data:/home/agent/.ssh
     environment:
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       DOCKER_HOST: unix:///var/run/docker.sock
@@ -37,3 +38,4 @@ networks:
 
 volumes:
   codex-docker-data:
+  ssh-data:

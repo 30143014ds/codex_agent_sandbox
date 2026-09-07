@@ -2,204 +2,179 @@
 
 ## Goal
 
-Use subagents proactively to reduce cost, preserve parent-agent context,
-parallelize independent work, and apply stronger reasoning only where it
-materially improves the result.
+This project is small enough (solo, phased build) that a multi-tier agent
+hierarchy isn't worth the overhead. Keep it to two things:
 
-The main agent is responsible for the overall task.
+- `scout` — used only to keep large, mostly read-only work out of the main
+  agent's own context. The trigger is size/cost, not task type.
+- Everything else — implementation, debugging, refactors, tests, and yes,
+  architectural/design decisions — happens in the main agent thread.
 
-Do not delegate blindly. Decompose the task first and choose the cheapest
-agent capable of reliably completing each part.
-
----
-
-## Available agents
-
-### `scout`
-
-Use `scout` for fast, bounded, mostly read-only work:
-
-- repository exploration
-- locating files, symbols, references, and dependencies
-- tracing execution paths
-- reading and summarizing unfamiliar code
-- examining logs and error output
-- identifying relevant tests
-- dependency investigation
-- straightforward investigation
-- gathering context before implementation
-
-Prefer `scout` whenever the output is primarily information rather than
-engineering judgment.
-
-Do not use a more expensive agent merely because the repository is large.
-Large but straightforward exploration should still use `scout`.
+There is no `architect` subagent. When a decision is genuinely hard,
+ambiguous, or expensive to undo, the main agent does not call a stronger
+model to decide it — it stops and asks the user. Architectural taste and
+tradeoffs on this project are the user's call, not something to automate
+away.
 
 ---
 
-### `worker`
+## `scout` — triggered by context cost, not task type
 
-Use `worker` for normal software engineering:
+Delegate to `scout` when doing the work inline would burn a lot of the main
+agent's context for little reasoning value — regardless of whether that
+work is "investigation," "implementation," or anything else. Concretely:
+
+- reading/searching a large number of files or a large codebase area
+- reading long logs or long error output
+- tracing something across many files/services
+- summarizing an unfamiliar or large chunk of code before touching it
+- any pull of bulk data/output that is only needed in summarized form
+
+Do NOT delegate to `scout` just because a task is "investigation-flavored."
+A quick, targeted look at one or two files the main agent doesn't already
+have loaded is cheaper to just do directly than to hand off. The question
+is always: "would doing this inline meaningfully bloat my context for
+information I only need in summary?" If yes, use `scout`. If no, just do
+it.
+
+`scout` reports back a summary, not raw dumps — the point is to protect the
+main agent's context, so pulling everything back verbatim defeats the
+purpose.
+
+---
+
+## Everything else: the main agent
+
+By default, the main agent does the actual engineering work itself, once
+`scout` (if it was needed at all) has supplied a summary:
 
 - feature implementation
-- bug fixes
-- moderate debugging
+- bug fixes, including moderately tricky ones
 - multi-file changes
-- API changes
-- database/model changes
-- refactoring
-- Docker and deployment configuration
-- integration work
+- refactors
 - tests
-- normal code review
+- Docker/deployment config
+- normal code review of its own diff
 
-This should be the default implementation agent.
-
----
-
-### `architect`
-
-Use `architect` only when stronger reasoning is justified:
-
-- architecture decisions
-- difficult or non-obvious bugs
-- concurrency or race conditions
-- security-sensitive changes
-- complex infrastructure/networking problems
-- large architectural refactors
-- ambiguous requirements with important technical tradeoffs
-- repeated failed attempts by `worker`
-- situations where a wrong engineering decision would be expensive to undo
-
-Do not use `architect` for routine repository exploration, boilerplate,
-straightforward implementation, or mechanical work.
+This is the default path. Most tasks on this project should never leave
+the main agent thread.
 
 ---
 
-## Escalation
+## When to stop and ask the user instead of deciding alone
 
-Preferred escalation path:
+There is no automated escalation to a "smarter" agent for hard problems.
+Instead, the main agent pauses and asks the user when it hits something
+like:
 
-`scout` → `worker` → `architect`
+- an architecture or schema decision (e.g. how the DB, CalDAV, and Garmin
+  sync pieces should relate)
+- a genuinely ambiguous requirement where more than one reasonable
+  interpretation exists
+- a choice that would be expensive or awkward to reverse later
+- repeated failed attempts at the same bug, where the next step is a
+  judgment call about approach rather than more debugging
+- anything security-sensitive where the "right" tradeoff depends on how
+  the user plans to run/expose this
 
-Escalate only when necessary.
+Ask a specific, concrete question with the main options and their
+tradeoffs laid out — don't just say "this is hard, what do you want to
+do?" Give the user something to react to.
 
-Examples:
-
-- Missing repository context:
-  use `scout`.
-
-- Requirements are understood and implementation is reasonably clear:
-  use `worker`.
-
-- Investigation exposes a genuinely difficult architectural or debugging
-  problem:
-  use `architect`.
-
-Do not escalate just because a task is large.
-
-Large but straightforward tasks should normally remain with `worker`,
-with `scout` subagents used for supporting investigation.
+If the user isn't available and the decision truly can't wait, the main
+agent may do a one-off deep-reasoning pass itself (not a standing
+subagent, just thinking harder) and clearly flag the assumption it made so
+the user can correct it later.
 
 ---
 
 ## Proactive delegation
 
-For non-trivial tasks, actively consider whether parts of the work should be
-delegated instead of performing the entire task in the parent thread.
-
-Good delegation examples:
-
 ### Feature implementation
 
-1. `scout` maps the relevant code paths.
-2. `worker` implements the feature.
-3. Parent verifies integration and completeness.
+1. If understanding the relevant code would burn significant context,
+   `scout` summarizes it first.
+2. Main agent implements the feature directly.
+3. Main agent verifies integration and completeness itself.
 
-### Difficult bug
+### Bug fix
 
-1. `scout` gathers evidence and traces the failure path.
-2. `worker` attempts the normal fix.
-3. If the root cause remains unclear or architecturally complex,
-   delegate the difficult part to `architect`.
-4. Parent performs final verification.
+1. If reproducing/tracing the bug means digging through a lot of code or
+   logs, `scout` gathers and summarizes the evidence.
+2. Main agent attempts the fix directly.
+3. If it's not converging, or the right fix is genuinely a design
+   question, stop and ask the user rather than escalating to another
+   model.
 
-### Large repository investigation
+### Large investigation
 
-Run multiple independent `scout` agents in parallel when their investigation
-areas do not overlap significantly.
+Run multiple independent `scout` agents in parallel when their areas don't
+overlap, then the main agent synthesizes before doing anything else.
 
-### Multi-component change
+### Multi-part change (e.g. adding a new sync/service layer)
 
-Use parallel `scout` agents to understand independent components first.
-Delegate implementation to one or more `worker` agents only after the
-interfaces and responsibilities are understood.
+Parallel `scout` agents can map independent existing components first. The
+main agent then implements sequentially — there's no separate
+implementation subagent to parallelize across, and for this project's
+size that's fine.
 
 ---
 
 ## Parallelism
 
-Use parallel agents when tasks are genuinely independent.
+Parallel `scout` agents are fine when investigation areas are genuinely
+independent (e.g. "how does the CalDAV service talk to the DB" and "how
+does the Garmin client currently authenticate" — unrelated enough to
+split).
 
-Good examples:
+Avoid parallel `scout` agents when:
 
-- investigate frontend and backend independently
-- inspect application code and tests independently
-- analyze several unrelated errors
-- inspect several independent services
+- one investigation depends on another's result
+- the areas overlap significantly
+- coordination cost exceeds the benefit
 
-Avoid parallel agents when:
-
-- one task depends on the result of another
-- agents would edit the same files
-- agents need to make the same architectural decision
-- coordination cost is greater than the expected benefit
-
-Avoid unnecessary agent spawning.
+Never parallelize the actual implementation across multiple agents on this
+project — one main agent, one thread, sequential.
 
 ---
 
-## Parent-agent responsibility
+## Main-agent responsibility
 
-Subagents provide work products; they do not own the overall task.
+The main agent owns the whole task:
 
-The parent agent remains responsible for:
+- understanding what the user actually asked for
+- deciding whether any part of it is expensive enough context-wise to
+  hand to `scout`
+- doing the implementation itself
+- recognizing when it's hit a decision that isn't its call to make, and
+  asking the user instead of guessing or escalating to another model
+- reviewing its own diff critically before calling something done
+- verification
+- integration
 
-- understanding the user's actual request
-- decomposing the task
-- choosing appropriate agents
-- resolving conflicting findings
-- reviewing proposed changes
-- integrating results
-- ensuring requested behavior is complete
-- final verification
-
-Never accept a subagent result solely because the subagent reports success.
-
-Inspect important changes and evidence yourself.
+Because the same agent writes and reviews the code, be deliberately
+skeptical of your own diff — there's no separate implementer to catch what
+you missed.
 
 ---
 
 ## Verification
 
-Implementation is not complete until it has been reasonably verified.
+Implementation isn't done until it's been reasonably verified. Depending
+on what changed:
 
-Depending on the project, verification may include:
-
-- unit tests
-- integration tests
-- end-to-end tests
+- unit / integration / end-to-end tests
 - type checking
 - linting
-- compilation/build
-- Docker build
-- runtime smoke tests
+- build (including Docker build, given this project's services)
+- runtime smoke test
 - checking logs
 
-Choose verification appropriate to the change.
+Lean on automated verification over self-assessment wherever possible,
+since self-review is the main agent's only check on itself here.
 
-If verification fails, investigate the failure before escalating to a more
-expensive model.
+If verification fails, investigate it yourself before deciding whether
+it's actually a "stop and ask the user" situation.
 
 Do not hide failed verification.
 
@@ -207,33 +182,26 @@ Do not hide failed verification.
 
 ## Cost discipline
 
-Use the cheapest capable agent.
-
-Preferred model hierarchy:
-
-- `scout` — Luna / medium
-- `worker` — Terra / high
-- `architect` — Sol / high
-
-Do not use `architect` merely to get a second opinion on straightforward work.
-
-Do not repeatedly ask multiple agents to solve the exact same easy problem.
-
-Spend additional reasoning only where it improves correctness or materially
-reduces engineering risk.
+- Don't send a quick, targeted look at one or two files to `scout` — just
+  read them directly.
+- Don't ask the user about something that has one obviously correct
+  answer — that's not what "stop and ask" is for.
+- Don't do a "one-off deep-reasoning pass" as a substitute for asking the
+  user when the user is actually available; it's a fallback, not a
+  shortcut to avoid a question.
+- Don't repeatedly retry the same failing approach hoping it works —
+  either change approach or ask.
 
 ---
 
 ## Completion
 
-Before reporting completion:
+Before reporting something done:
 
-1. Confirm the original request was actually satisfied.
-2. Review important subagent outputs.
-3. Check the resulting diff when files changed.
+1. Confirm the actual request was satisfied.
+2. Review any `scout` summaries you relied on for accuracy.
+3. Check your own diff.
 4. Run appropriate verification.
-5. Mention any verification that could not be performed.
-6. Mention material remaining risks or assumptions.
-
-Do not describe work as complete when only investigation or partial
-implementation was performed.
+5. Say what verification wasn't possible.
+6. Flag any assumption you made (especially any made via the one-off
+   deep-reasoning fallback instead of asking) so the user can correct it.
