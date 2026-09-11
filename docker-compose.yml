@@ -16,11 +16,13 @@ services:
     environment:
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       DOCKER_HOST: unix:///var/run/docker.sock
+    # Ports published by the nested Docker daemon become available on the
+    # sandbox container. Expose them only on the host loopback interface and
+    # reach them from a workstation through an SSH tunnel.
     ports:
-      - "0.0.0.0:80:80"
-      - "0.0.0.0:443:443"
-      - "0.0.0.0:443:443/udp"
-      - "0.0.0.0:8080:8080"
+      - "127.0.0.1:${DEV_HTTP_PORT:-18080}:80"
+      - "127.0.0.1:${DEV_HTTPS_PORT:-18443}:443"
+      - "127.0.0.1:${DEV_ADMINER_PORT:-18081}:8080"
     stdin_open: true
     tty: true
     restart: unless-stopped

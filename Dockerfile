@@ -50,7 +50,7 @@ ENV DOCKER_HOST=unix:///var/run/docker.sock \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
-EXPOSE 80 443 443/udp 8080
+# EXPOSE 80 443 443/udp 8080
 
 USER agent
 WORKDIR /workspace
