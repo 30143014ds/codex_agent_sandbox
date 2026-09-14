@@ -26,3 +26,6 @@ echo
 echo "Примеры:"
 echo "  ./bin/agent create developer dev-main -e /absolute/path/to/project"
 echo "  ./bin/agent create cbt cbt-main"
+echo
+echo "Bash completion (выполните сейчас для удобного выбора команд и инстасов через Tab или добавьте строку в ~/.bashrc):"
+printf '  source %q\n' "${ROOT_DIR}/completion/agent.bash"
