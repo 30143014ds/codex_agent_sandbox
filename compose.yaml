@@ -1,0 +1,45 @@
+services:
+  agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: base
+      args:
+        HOST_UID: ${HOST_UID:-1000}
+        HOST_GID: ${HOST_GID:-1000}
+    image: codex-agent-${AGENT_TYPE:-base}:local
+    environment:
+      AGENT_INSTANCE: ${AGENT_INSTANCE:?Set AGENT_INSTANCE in the instance env file}
+      AGENT_TYPE: ${AGENT_TYPE:?Set AGENT_TYPE in the instance env file}
+      CODEX_HOME: /home/agent/.codex
+    volumes:
+      - type: bind
+        source: ${CODEX_STATE_PATH:?Set CODEX_STATE_PATH in the instance env file}
+        target: /home/agent/.codex
+      - type: bind
+        source: ${AGENT_CONFIG_PATH:?Set AGENT_CONFIG_PATH in the instance env file}
+        target: /home/agent/.codex/config.toml
+        read_only: true
+      - type: bind
+        source: ${AGENT_INSTRUCTIONS_PATH:?Set AGENT_INSTRUCTIONS_PATH in the instance env file}
+        target: /home/agent/.codex/AGENTS.md
+        read_only: true
+      - type: bind
+        source: ${AGENT_SUBAGENTS_PATH:?Set AGENT_SUBAGENTS_PATH in the instance env file}
+        target: /home/agent/.codex/agents
+        read_only: true
+      - type: bind
+        source: ${AGENT_SKILLS_PATH:?Set AGENT_SKILLS_PATH in the instance env file}
+        target: /home/agent/.agents/skills
+      - type: bind
+        source: ${WORKSPACE_PATH:?Set WORKSPACE_PATH in the instance env file}
+        target: /workspace
+    working_dir: /workspace
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+    networks: [agent-net]
+
+networks:
+  agent-net:
+    driver: bridge

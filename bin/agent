@@ -1,0 +1,274 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+BASE_COMPOSE="${ROOT_DIR}/compose.yaml"
+INSTANCES_DIR="${ROOT_DIR}/instances"
+AGENTS_DIR="${ROOT_DIR}/agents"
+
+usage() {
+  cat <<'EOF'
+Usage:
+  ./bin/agent list
+  ./bin/agent create <agent-type> <instance> [-e [absolute-workspace-path]]
+  ./bin/agent start <instance>
+  ./bin/agent attach <instance>
+  ./bin/agent shell <instance>
+  ./bin/agent logs <instance>
+  ./bin/agent stop <instance>
+  ./bin/agent down <instance>
+  ./bin/agent status [instance]
+
+Examples:
+  ./bin/agent create developer dev-main -e /srv/projects/my-app
+  ./bin/agent create developer dev-scratch -e
+  ./bin/agent create cbt cbt-main
+  ./bin/agent start dev-main
+  ./bin/agent attach cbt-main
+EOF
+}
+
+fail() {
+  echo "Error: $*" >&2
+  exit 1
+}
+
+require_name() {
+  local value="$1"
+  local label="$2"
+  [[ "${value}" =~ ^[a-z0-9][a-z0-9_-]*$ ]] \
+    || fail "${label} must match [a-z0-9][a-z0-9_-]*"
+}
+
+absolute_path() {
+  local path="$1"
+  if [[ "${path}" = /* ]]; then
+    printf '%s\n' "${path}"
+  else
+    printf '%s\n' "$(cd "$(dirname "${path}")" && pwd)/$(basename "${path}")"
+  fi
+}
+
+read_env_value() {
+  local file="$1"
+  local key="$2"
+  sed -n "s/^${key}=//p" "${file}" | tail -n 1
+}
+
+load_instance() {
+  local instance="$1"
+  require_name "${instance}" "instance"
+
+  INSTANCE_DIR="${INSTANCES_DIR}/${instance}"
+  INSTANCE_ENV="${INSTANCE_DIR}/instance.env"
+  [[ -f "${INSTANCE_ENV}" ]] || fail "instance '${instance}' does not exist"
+
+  AGENT_TYPE="$(read_env_value "${INSTANCE_ENV}" AGENT_TYPE)"
+  [[ -n "${AGENT_TYPE}" ]] || fail "AGENT_TYPE is missing in ${INSTANCE_ENV}"
+
+  AGENT_OVERRIDE="${AGENTS_DIR}/${AGENT_TYPE}/compose.override.yaml"
+  [[ -f "${AGENT_OVERRIDE}" ]] || fail "missing ${AGENT_OVERRIDE}"
+
+  PROJECT_NAME="codex-${instance}"
+}
+
+compose_for_instance() {
+  local -a args=(docker compose)
+  if [[ -f "${ROOT_DIR}/.env" ]]; then
+    args+=(--env-file "${ROOT_DIR}/.env")
+  fi
+  args+=(
+    --env-file "${INSTANCE_ENV}"
+    --project-name "${PROJECT_NAME}"
+    --file "${BASE_COMPOSE}"
+    --file "${AGENT_OVERRIDE}"
+  )
+  "${args[@]}" "$@"
+}
+
+list_all() {
+  echo "Agent types:"
+  local found=false
+  for dir in "${AGENTS_DIR}"/*; do
+    [[ -d "${dir}" \
+      && -f "${dir}/AGENTS.md" \
+      && -f "${dir}/config.toml" \
+      && -f "${dir}/compose.override.yaml" ]] || continue
+    found=true
+    printf '  %s\n' "$(basename "${dir}")"
+  done
+  [[ "${found}" == true ]] || echo "  (none)"
+
+  echo
+  echo "Instances:"
+  found=false
+  for file in "${INSTANCES_DIR}"/*/instance.env; do
+    [[ -f "${file}" ]] || continue
+    found=true
+    local instance type
+    instance="$(basename "$(dirname "${file}")")"
+    type="$(read_env_value "${file}" AGENT_TYPE)"
+    printf '  %-24s %s\n' "${instance}" "${type}"
+  done
+  [[ "${found}" == true ]] || echo "  (none)"
+}
+
+create_instance() {
+  local type="${1:-}"
+  local instance="${2:-}"
+
+  [[ -n "${type}" && -n "${instance}" ]] || { usage; exit 2; }
+  require_name "${type}" "agent type"
+  require_name "${instance}" "instance"
+
+  shift 2
+  local external_workspace=false
+  local requested_workspace=""
+  if (( $# > 0 )); then
+    [[ "$1" == "-e" ]] || fail "expected -e, got '$1'"
+    external_workspace=true
+    shift
+    if (( $# > 0 )); then
+      requested_workspace="$1"
+      [[ "${requested_workspace}" = /* ]] \
+        || fail "external workspace path must be absolute"
+      shift
+    fi
+  fi
+  (( $# == 0 )) || fail "too many arguments for create"
+
+  local type_dir="${AGENTS_DIR}/${type}"
+  [[ -d "${type_dir}" ]] || fail "unknown agent type '${type}'"
+  [[ ! -e "${INSTANCES_DIR}/${instance}" ]] || fail "instance '${instance}' already exists"
+
+  local required
+  for required in AGENTS.md config.toml compose.override.yaml; do
+    [[ -f "${type_dir}/${required}" ]] \
+      || fail "agent type '${type}' is missing ${required}"
+  done
+  local instance_dir="${INSTANCES_DIR}/${instance}"
+  local workspace_path
+  local launcher_owned_workspace=false
+  if [[ -n "${requested_workspace}" ]]; then
+    mkdir -p "${requested_workspace}"
+    workspace_path="$(absolute_path "${requested_workspace}")"
+  elif [[ "${external_workspace}" == true ]]; then
+    workspace_path="${ROOT_DIR}/workspaces/${instance}"
+    launcher_owned_workspace=true
+  else
+    workspace_path="${instance_dir}/workspace"
+    launcher_owned_workspace=true
+  fi
+
+  mkdir -p \
+    "${instance_dir}/codex" \
+    "${instance_dir}/skills" \
+    "${instance_dir}/subagents" \
+    "${instance_dir}/ssh" \
+    "${workspace_path}"
+  chmod 700 "${instance_dir}" "${instance_dir}/codex" \
+    "${instance_dir}/skills" "${instance_dir}/subagents" \
+    "${instance_dir}/ssh"
+  if [[ "${launcher_owned_workspace}" == true ]]; then
+    chmod 700 "${workspace_path}"
+  fi
+
+  if [[ -d "${type_dir}/skills" ]]; then
+    cp -a "${type_dir}/skills/." "${instance_dir}/skills/"
+  fi
+  if [[ -d "${type_dir}/subagents" ]]; then
+    cp -a "${type_dir}/subagents/." "${instance_dir}/subagents/"
+  fi
+  if [[ -d "${type_dir}/workspace-template" ]]; then
+    cp -a -n "${type_dir}/workspace-template/." "${workspace_path}/"
+  fi
+
+  cat >"${instance_dir}/instance.env" <<EOF
+AGENT_TYPE=${type}
+AGENT_INSTANCE=${instance}
+HOST_UID=$(id -u)
+HOST_GID=$(id -g)
+CODEX_STATE_PATH=${instance_dir}/codex
+AGENT_CONFIG_PATH=${type_dir}/config.toml
+AGENT_INSTRUCTIONS_PATH=${type_dir}/AGENTS.md
+AGENT_SUBAGENTS_PATH=${instance_dir}/subagents
+AGENT_SKILLS_PATH=${instance_dir}/skills
+WORKSPACE_PATH=${workspace_path}
+SSH_STATE_PATH=${instance_dir}/ssh
+DEV_BIND_IP=127.0.0.1
+DEV_HTTP_PORT=18080
+DEV_HTTPS_PORT=18443
+DEV_ADMINER_PORT=18081
+EOF
+  chmod 600 "${instance_dir}/instance.env"
+
+  echo "Created '${instance}' from agent type '${type}'."
+  echo "Workspace: ${workspace_path}"
+  echo "Start:     ./bin/agent start ${instance}"
+}
+
+status_all() {
+  local found=false
+  for file in "${INSTANCES_DIR}"/*/instance.env; do
+    [[ -f "${file}" ]] || continue
+    found=true
+    local instance
+    instance="$(basename "$(dirname "${file}")")"
+    load_instance "${instance}"
+    echo "== ${instance} (${AGENT_TYPE}) =="
+    compose_for_instance ps
+  done
+  [[ "${found}" == true ]] || echo "No instances."
+}
+
+main() {
+  local command="${1:-}"
+  case "${command}" in
+    list)
+      list_all
+      ;;
+    create)
+      create_instance "${@:2}"
+      ;;
+    start)
+      load_instance "${2:-}"
+      compose_for_instance up -d --build
+      ;;
+    attach)
+      load_instance "${2:-}"
+      compose_for_instance exec agent codex
+      ;;
+    shell)
+      load_instance "${2:-}"
+      compose_for_instance exec agent bash
+      ;;
+    logs)
+      load_instance "${2:-}"
+      compose_for_instance logs --follow
+      ;;
+    stop)
+      load_instance "${2:-}"
+      compose_for_instance stop
+      ;;
+    down)
+      load_instance "${2:-}"
+      compose_for_instance down
+      ;;
+    status)
+      if [[ -n "${2:-}" ]]; then
+        load_instance "$2"
+        compose_for_instance ps
+      else
+        status_all
+      fi
+      ;;
+    help|-h|--help|"")
+      usage
+      ;;
+    *)
+      fail "unknown command '${command}'"
+      ;;
+  esac
+}
+
+main "$@"

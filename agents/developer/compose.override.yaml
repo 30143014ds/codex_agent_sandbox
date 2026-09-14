@@ -1,0 +1,26 @@
+services:
+  agent:
+    build:
+      target: developer
+    privileged: true
+    environment:
+      DOCKER_HOST: unix:///var/run/docker.sock
+    volumes:
+      - type: volume
+        source: docker-data
+        target: /var/lib/docker
+      - type: bind
+        source: ${SSH_STATE_PATH:?Set SSH_STATE_PATH in the instance env file}
+        target: /home/agent/.ssh
+    ports:
+      - "${DEV_BIND_IP:-127.0.0.1}:${DEV_HTTP_PORT:-18080}:80"
+      - "${DEV_BIND_IP:-127.0.0.1}:${DEV_HTTPS_PORT:-18443}:443"
+      - "${DEV_BIND_IP:-127.0.0.1}:${DEV_ADMINER_PORT:-18081}:8080"
+    healthcheck:
+      test: ["CMD", "docker", "info"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  docker-data:

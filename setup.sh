@@ -1,45 +1,28 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# --- 1. Проверка Docker ---
-if ! command -v docker &> /dev/null; then
-  echo "Docker не найден. Установите Docker Engine и запустите скрипт снова:"
-  echo "  curl -fsSL https://get.docker.com | sudo sh"
-  echo "  sudo usermod -aG docker \$USER && newgrp docker"
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "${ROOT_DIR}"
+
+if ! command -v docker >/dev/null 2>&1; then
+  echo "Docker не найден. Установите Docker Engine и повторите запуск:" >&2
+  echo "  curl -fsSL https://get.docker.com | sudo sh" >&2
+  echo "  sudo usermod -aG docker \$USER && newgrp docker" >&2
   exit 1
 fi
 
-# --- 2. Проверка Docker Compose ---
-if docker compose version &> /dev/null; then
-  COMPOSE="docker compose"
-elif command -v docker-compose &> /dev/null; then
-  COMPOSE="docker-compose"
-else
-  echo "Docker Compose не найден. Установите плагин и запустите скрипт снова:"
-  echo "  sudo apt install -y docker-compose-plugin"
+if ! docker compose version >/dev/null 2>&1; then
+  echo "Требуется Docker Compose plugin (команда: docker compose)." >&2
   exit 1
 fi
 
-echo "Используется: $COMPOSE"
+mkdir -p instances workspaces
+chmod 0755 bin/agent
 
-# --- 3. .env ---
-if [ ! -f .env ]; then
-  cp .env.example .env
-  echo "Создан файл .env — заполните ключи Codex перед следующим запуском."
-  exit 0
-fi
-
-# --- 4. Рабочие директории ---
-mkdir -p workspace codex-config
-
-export HOST_UID=$(id -u)
-export HOST_GID=$(id -g)
-
-# --- 5. Сборка и запуск ---
-$COMPOSE build
-$COMPOSE up -d
-
-echo ""
-echo "Готово. Контейнер codex_agent_sandbox запущен."
-echo "Codex CLI:   docker exec -it codex_agent_sandbox codex"
-echo "Конфиги на хосте: ./codex-config/"
+echo
+echo "Инициализация завершена. Доступные типы агентов:"
+./bin/agent list
+echo
+echo "Примеры:"
+echo "  ./bin/agent create developer dev-main -e /absolute/path/to/project"
+echo "  ./bin/agent create cbt cbt-main"

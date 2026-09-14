@@ -1,4 +1,6 @@
 .env
+instances/
+workspaces/
 workspace/
 node_modules/
 codex-config/

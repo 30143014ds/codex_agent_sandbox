@@ -1,0 +1,8 @@
+# CBT agent Codex configuration.
+#:schema https://developers.openai.com/codex/config-schema.json
+
+model = "gpt-5.6-sol"
+model_reasoning_effort = "high"
+
+[agents]
+enabled = false
