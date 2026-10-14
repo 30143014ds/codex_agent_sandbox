@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+codex_prefix="${HOME}/.local/share/codex"
+if [[ ! -f "${codex_prefix}/bin/codex" ]]; then
+  mkdir -p "${codex_prefix}"
+  cp -a --no-preserve=ownership /opt/codex/. "${codex_prefix}/"
+fi
+
+exec "${codex_prefix}/bin/codex" "$@"

@@ -7,10 +7,7 @@ _CODEX_AGENT_COMPLETION_ROOT="$(
 _codex_agent_types() {
   local dir
   for dir in "${_CODEX_AGENT_COMPLETION_ROOT}"/agents/*; do
-    [[ -d "${dir}" \
-      && -f "${dir}/AGENTS.md" \
-      && -f "${dir}/config.toml" \
-      && -f "${dir}/compose.override.yaml" ]] || continue
+    [[ -d "${dir}" ]] || continue
     basename "${dir}"
   done
 }

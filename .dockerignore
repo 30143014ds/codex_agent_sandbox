@@ -1,0 +1,7 @@
+.git
+instances
+workspaces
+workspace
+node_modules
+*.log
+__pycache__

@@ -66,23 +66,23 @@ load_instance() {
   AGENT_TYPE="$(read_env_value "${INSTANCE_ENV}" AGENT_TYPE)"
   [[ -n "${AGENT_TYPE}" ]] || fail "AGENT_TYPE is missing in ${INSTANCE_ENV}"
 
-  AGENT_OVERRIDE="${AGENTS_DIR}/${AGENT_TYPE}/compose.override.yaml"
-  [[ -f "${AGENT_OVERRIDE}" ]] || fail "missing ${AGENT_OVERRIDE}"
+  [[ -n "$(read_env_value "${INSTANCE_ENV}" INSTANCE_HOME_PATH)" ]] \
+    || fail "instance '${instance}' uses the old layout; create a new instance"
+  AGENT_OVERRIDE="${INSTANCE_DIR}/compose.override.yaml"
 
   PROJECT_NAME="codex-${instance}"
 }
 
 compose_for_instance() {
   local -a args=(docker compose)
-  if [[ -f "${ROOT_DIR}/.env" ]]; then
-    args+=(--env-file "${ROOT_DIR}/.env")
-  fi
   args+=(
     --env-file "${INSTANCE_ENV}"
     --project-name "${PROJECT_NAME}"
     --file "${BASE_COMPOSE}"
-    --file "${AGENT_OVERRIDE}"
   )
+  if [[ -f "${AGENT_OVERRIDE}" ]]; then
+    args+=(--file "${AGENT_OVERRIDE}")
+  fi
   "${args[@]}" "$@"
 }
 
@@ -90,10 +90,7 @@ list_all() {
   echo "Agent types:"
   local found=false
   for dir in "${AGENTS_DIR}"/*; do
-    [[ -d "${dir}" \
-      && -f "${dir}/AGENTS.md" \
-      && -f "${dir}/config.toml" \
-      && -f "${dir}/compose.override.yaml" ]] || continue
+    [[ -d "${dir}" ]] || continue
     found=true
     printf '  %s\n' "$(basename "${dir}")"
   done
@@ -141,12 +138,8 @@ create_instance() {
   [[ -d "${type_dir}" ]] || fail "unknown agent type '${type}'"
   [[ ! -e "${INSTANCES_DIR}/${instance}" ]] || fail "instance '${instance}' already exists"
 
-  local required
-  for required in AGENTS.md config.toml compose.override.yaml; do
-    [[ -f "${type_dir}/${required}" ]] \
-      || fail "agent type '${type}' is missing ${required}"
-  done
   local instance_dir="${INSTANCES_DIR}/${instance}"
+  local instance_home="${instance_dir}/home"
   local workspace_path
   local launcher_owned_workspace=false
   if [[ -n "${requested_workspace}" ]]; then
@@ -161,23 +154,23 @@ create_instance() {
   fi
 
   mkdir -p \
-    "${instance_dir}/codex" \
-    "${instance_dir}/skills" \
-    "${instance_dir}/subagents" \
-    "${instance_dir}/ssh" \
+    "${instance_home}" \
     "${workspace_path}"
-  chmod 700 "${instance_dir}" "${instance_dir}/codex" \
-    "${instance_dir}/skills" "${instance_dir}/subagents" \
-    "${instance_dir}/ssh"
+  if [[ -d "${type_dir}/home-template" ]]; then
+    cp -a "${type_dir}/home-template/." "${instance_home}/"
+  fi
+  mkdir -p "${instance_home}/.codex/agents" \
+    "${instance_home}/.agents/skills" "${instance_home}/.ssh"
+  chmod 700 "${instance_dir}" "${instance_home}" \
+    "${instance_home}/.codex" "${instance_home}/.codex/agents" \
+    "${instance_home}/.agents" "${instance_home}/.agents/skills" \
+    "${instance_home}/.ssh"
   if [[ "${launcher_owned_workspace}" == true ]]; then
     chmod 700 "${workspace_path}"
   fi
 
-  if [[ -d "${type_dir}/skills" ]]; then
-    cp -a "${type_dir}/skills/." "${instance_dir}/skills/"
-  fi
-  if [[ -d "${type_dir}/subagents" ]]; then
-    cp -a "${type_dir}/subagents/." "${instance_dir}/subagents/"
+  if [[ -f "${type_dir}/compose.override.yaml" ]]; then
+    cp -a "${type_dir}/compose.override.yaml" "${instance_dir}/compose.override.yaml"
   fi
   if [[ -d "${type_dir}/workspace-template" ]]; then
     cp -a -n "${type_dir}/workspace-template/." "${workspace_path}/"
@@ -188,13 +181,8 @@ AGENT_TYPE=${type}
 AGENT_INSTANCE=${instance}
 HOST_UID=$(id -u)
 HOST_GID=$(id -g)
-CODEX_STATE_PATH=${instance_dir}/codex
-AGENT_CONFIG_PATH=${type_dir}/config.toml
-AGENT_INSTRUCTIONS_PATH=${type_dir}/AGENTS.md
-AGENT_SUBAGENTS_PATH=${instance_dir}/subagents
-AGENT_SKILLS_PATH=${instance_dir}/skills
+INSTANCE_HOME_PATH=${instance_home}
 WORKSPACE_PATH=${workspace_path}
-SSH_STATE_PATH=${instance_dir}/ssh
 DEV_BIND_IP=127.0.0.1
 DEV_HTTP_PORT=18080
 DEV_HTTPS_PORT=18443
@@ -232,7 +220,7 @@ main() {
       ;;
     start)
       load_instance "${2:-}"
-      compose_for_instance up -d --build
+      compose_for_instance up -d --build --wait --wait-timeout 90
       ;;
     attach)
       load_instance "${2:-}"

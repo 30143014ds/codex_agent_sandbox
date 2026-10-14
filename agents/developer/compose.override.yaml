@@ -9,18 +9,19 @@ services:
       - type: volume
         source: docker-data
         target: /var/lib/docker
-      - type: bind
-        source: ${SSH_STATE_PATH:?Set SSH_STATE_PATH in the instance env file}
-        target: /home/agent/.ssh
+    tmpfs:
+      - /run
+    stop_grace_period: 60s
     ports:
       - "${DEV_BIND_IP:-127.0.0.1}:${DEV_HTTP_PORT:-18080}:80"
       - "${DEV_BIND_IP:-127.0.0.1}:${DEV_HTTPS_PORT:-18443}:443"
       - "${DEV_BIND_IP:-127.0.0.1}:${DEV_ADMINER_PORT:-18081}:8080"
     healthcheck:
       test: ["CMD", "docker", "info"]
-      interval: 30s
+      interval: 5s
       timeout: 5s
       retries: 3
+      start_period: 60s
 
 volumes:
   docker-data:

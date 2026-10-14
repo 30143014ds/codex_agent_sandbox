@@ -13,7 +13,7 @@ RUN apt-get update \
        bash ca-certificates curl findutils git jq procps ripgrep sudo tini \
     && rm -rf /var/lib/apt/lists/* \
     && corepack enable \
-    && npm install --global @openai/codex \
+    && npm install --global --prefix /opt/codex @openai/codex \
     && python -m pip install --no-cache-dir pipx==1.17.1 uv==0.12.7
 
 RUN if getent passwd "${HOST_UID}" >/dev/null 2>&1; then \
@@ -33,6 +33,10 @@ RUN if getent passwd "${HOST_UID}" >/dev/null 2>&1; then \
 ENV CODEX_HOME=/home/agent/.codex \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
+
+RUN rm /usr/local/bin/npm
+COPY --chmod=0755 runtime/npm /usr/local/bin/npm
+COPY --chmod=0755 runtime/codex /usr/local/bin/codex
 
 USER agent
 WORKDIR /workspace
@@ -69,4 +73,4 @@ ENV COMPOSE_DOCKER_CLI_BUILD=1 \
 
 USER agent
 
-CMD ["bash", "-lc", "sudo dockerd --host=unix:///var/run/docker.sock --group=agent > /tmp/dockerd.log 2>&1 & for _ in $(seq 1 60); do if docker info >/dev/null 2>&1; then exec sleep infinity; fi; sleep 1; done; echo 'Docker daemon did not become ready within 60 seconds. Log:' >&2; tail -n 100 /tmp/dockerd.log >&2 || true; exit 1"]
+CMD ["sudo", "-n", "dockerd", "--host=unix:///var/run/docker.sock", "--group=agent"]

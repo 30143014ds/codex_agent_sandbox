@@ -14,23 +14,8 @@ services:
       CODEX_HOME: /home/agent/.codex
     volumes:
       - type: bind
-        source: ${CODEX_STATE_PATH:?Set CODEX_STATE_PATH in the instance env file}
-        target: /home/agent/.codex
-      - type: bind
-        source: ${AGENT_CONFIG_PATH:?Set AGENT_CONFIG_PATH in the instance env file}
-        target: /home/agent/.codex/config.toml
-        read_only: true
-      - type: bind
-        source: ${AGENT_INSTRUCTIONS_PATH:?Set AGENT_INSTRUCTIONS_PATH in the instance env file}
-        target: /home/agent/.codex/AGENTS.md
-        read_only: true
-      - type: bind
-        source: ${AGENT_SUBAGENTS_PATH:?Set AGENT_SUBAGENTS_PATH in the instance env file}
-        target: /home/agent/.codex/agents
-        read_only: true
-      - type: bind
-        source: ${AGENT_SKILLS_PATH:?Set AGENT_SKILLS_PATH in the instance env file}
-        target: /home/agent/.agents/skills
+        source: ${INSTANCE_HOME_PATH:?Set INSTANCE_HOME_PATH in the instance env file}
+        target: /home/agent
       - type: bind
         source: ${WORKSPACE_PATH:?Set WORKSPACE_PATH in the instance env file}
         target: /workspace
