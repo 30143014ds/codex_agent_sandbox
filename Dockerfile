@@ -32,7 +32,8 @@ RUN if getent passwd "${HOST_UID}" >/dev/null 2>&1; then \
 
 ENV CODEX_HOME=/home/agent/.codex \
     PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+    PYTHONUNBUFFERED=1 \
+    TERM=xterm-256color
 
 RUN rm /usr/local/bin/npm
 COPY --chmod=0755 runtime/npm /usr/local/bin/npm
