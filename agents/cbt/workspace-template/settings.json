@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "workspace_kind": "burns-cbt",
+  "timezone": null,
+  "cadence_days": {
+    "burns-depression-25-en-v1": 7,
+    "novaco-25-en-v1": 14,
+    "review": 28
+  },
+  "storage": {
+    "enabled": true,
+    "session_summaries": true,
+    "exercise_records": true,
+    "assessment_history": true,
+    "full_transcripts": false
+  },
+  "review_started_at": null
+}
