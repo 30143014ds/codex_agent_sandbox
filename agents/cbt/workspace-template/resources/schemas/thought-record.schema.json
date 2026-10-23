@@ -1,0 +1,168 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CBT thought record metadata",
+  "$comment": "Field structure adapted from arktnld/cbt-llm-kit; this JSON Schema is a new implementation. The following notice applies to the reused/adapted portion.\n\nMIT License\n\nCopyright (c) 2026 arktnld\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.",
+  "type": "object",
+  "properties": {
+    "situation": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "automatic_thought": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "belief_before": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "maximum": 100
+    },
+    "belief_after": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "maximum": 100
+    },
+    "emotions": {
+      "type": "object",
+      "properties": {
+        "before": {
+          "$ref": "#/$defs/ratings"
+        },
+        "after": {
+          "$ref": "#/$defs/ratings"
+        }
+      },
+      "additionalProperties": false
+    },
+    "physical_sensations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "behavior": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "evidence_for": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "evidence_against": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "alternative_thought": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "safety_behavior": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "core_beliefs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "cognitive_distortions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "category",
+          "status"
+        ],
+        "properties": {
+          "category": {
+            "enum": [
+              "all_or_nothing",
+              "overgeneralization",
+              "mental_filter",
+              "disqualifying_positive",
+              "jumping_to_conclusions",
+              "magnification_minimization",
+              "emotional_reasoning",
+              "should_statements",
+              "labeling",
+              "personalization"
+            ]
+          },
+          "subtype": {
+            "enum": [
+              null,
+              "mind_reading",
+              "fortune_telling"
+            ]
+          },
+          "status": {
+            "enum": [
+              "tentative",
+              "agreed"
+            ]
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "subtype": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "subtype"
+              ]
+            },
+            "then": {
+              "properties": {
+                "category": {
+                  "const": "jumping_to_conclusions"
+                }
+              }
+            }
+          }
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "ratings": {
+      "type": "object",
+      "propertyNames": {
+        "minLength": 1
+      },
+      "additionalProperties": {
+        "type": [
+          "number",
+          "null"
+        ],
+        "minimum": 0,
+        "maximum": 100
+      }
+    }
+  }
+}

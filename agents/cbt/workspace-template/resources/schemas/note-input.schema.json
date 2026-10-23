@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Input to save-note",
+  "type": "object",
+  "required": ["kind", "status", "title", "content"],
+  "properties": {
+    "kind": {"enum": ["session", "thought-record", "activity", "experiment", "review", "safety"]},
+    "status": {"enum": ["in_progress", "paused", "completed", "declined"]},
+    "title": {"type": "string", "minLength": 1},
+    "content": {"type": "string", "minLength": 1},
+    "record_id": {"type": "string", "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,119}$"},
+    "expected_updated_at": {"type": "string", "format": "date-time"},
+    "metadata": {
+      "type": "object",
+      "properties": {"thought_record": {"$ref": "thought-record.schema.json"}},
+      "additionalProperties": true
+    }
+  },
+  "allOf": [
+    {"if": {"properties": {"kind": {"const": "thought-record"}}}, "then": {"required": ["metadata"], "properties": {"metadata": {"required": ["thought_record"]}}}},
+    {"if": {"properties": {"kind": {"const": "thought-record"}, "status": {"const": "completed"}}}, "then": {"properties": {"metadata": {"properties": {"thought_record": {"required": ["situation", "automatic_thought"], "properties": {"situation": {"type": "string", "minLength": 1}, "automatic_thought": {"type": "string", "minLength": 1}}}}}}}}
+  ],
+  "dependentRequired": {"record_id": ["expected_updated_at"], "expected_updated_at": ["record_id"]},
+  "additionalProperties": false
+}

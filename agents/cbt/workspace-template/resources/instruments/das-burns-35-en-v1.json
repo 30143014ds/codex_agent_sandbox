@@ -1,0 +1,271 @@
+{
+  "schema_version": 1,
+  "instrument_id": "das-burns-35-en-v1",
+  "name": "Dysfunctional Attitude Scale, Burns' 35-item English book profile",
+  "language": "en",
+  "source": {
+    "book": "David D. Burns, Feeling Good: The New Mood Therapy",
+    "chapter": 10,
+    "english_form_urls": [
+      "https://brucewhealton.com/support_docs/Dysfunctional-Attitude-Scale.pdf",
+      "https://psytests.org/cbt/bdasDen-bl.html"
+    ],
+    "verification_date": "2026-10-23",
+    "provenance": "English reproductions cross-checked with the corresponding book items and scoring; no claim that a publisher-hosted first-edition facsimile was obtained.",
+    "normalization_notes": "Obvious typographic defects in the English PDF (items 4, 19, 29 and 35) corrected using the corroborating English form and the supplied book; contractions expanded."
+  },
+  "item_count": 35,
+  "scoring": "domains",
+  "answer_values": [
+    -2,
+    -1,
+    0,
+    1,
+    2
+  ],
+  "anchors": [
+    {
+      "value": -2,
+      "text": "Agree strongly"
+    },
+    {
+      "value": -1,
+      "text": "Agree slightly"
+    },
+    {
+      "value": 0,
+      "text": "Neutral"
+    },
+    {
+      "value": 1,
+      "text": "Disagree slightly"
+    },
+    {
+      "value": 2,
+      "text": "Disagree very much"
+    }
+  ],
+  "window": {
+    "type": "usual_beliefs_most_of_the_time",
+    "days": null
+  },
+  "safety_items": [],
+  "items": [
+    {
+      "id": 1,
+      "text": "Criticism will obviously upset the person who receives the criticism."
+    },
+    {
+      "id": 2,
+      "text": "It is best to give up my own interests in order to please other people."
+    },
+    {
+      "id": 3,
+      "text": "I need other people's approval in order to be happy."
+    },
+    {
+      "id": 4,
+      "text": "If someone important to me expects me to do something, then I really should do it."
+    },
+    {
+      "id": 5,
+      "text": "My value as a person depends greatly on what others think of me."
+    },
+    {
+      "id": 6,
+      "text": "I cannot find happiness without being loved by another person."
+    },
+    {
+      "id": 7,
+      "text": "If others dislike you, you are bound to be less happy."
+    },
+    {
+      "id": 8,
+      "text": "If people whom I care about reject me, it means there is something wrong with me."
+    },
+    {
+      "id": 9,
+      "text": "If a person I love does not love me, it means I am unlovable."
+    },
+    {
+      "id": 10,
+      "text": "Being isolated from others is bound to lead to unhappiness."
+    },
+    {
+      "id": 11,
+      "text": "If I am to be a worthwhile person, I must be truly outstanding in at least one major respect."
+    },
+    {
+      "id": 12,
+      "text": "I must be a useful, productive, creative person or life has no purpose."
+    },
+    {
+      "id": 13,
+      "text": "People who have good ideas are more worthy than those who do not."
+    },
+    {
+      "id": 14,
+      "text": "If I do not do as well as other people, it means I am inferior."
+    },
+    {
+      "id": 15,
+      "text": "If I fail at my work, then I am a failure as a person."
+    },
+    {
+      "id": 16,
+      "text": "If you cannot do something well, there is little point in doing it at all."
+    },
+    {
+      "id": 17,
+      "text": "It is shameful for a person to display weakness."
+    },
+    {
+      "id": 18,
+      "text": "A person should try to be the best at everything he/she undertakes."
+    },
+    {
+      "id": 19,
+      "text": "I should be upset if I make a mistake."
+    },
+    {
+      "id": 20,
+      "text": "If I do not set the highest standards for myself, I am likely to end up a second-rate person."
+    },
+    {
+      "id": 21,
+      "text": "If I strongly believe I deserve something, I have reason to expect that I should get it."
+    },
+    {
+      "id": 22,
+      "text": "It is necessary to become frustrated if you find obstacles to getting what you want."
+    },
+    {
+      "id": 23,
+      "text": "If I put other people's needs before my own, they should help me when I need something from them."
+    },
+    {
+      "id": 24,
+      "text": "If I am a good husband/wife, then my spouse is bound to love me."
+    },
+    {
+      "id": 25,
+      "text": "If I do nice things for someone, I can anticipate that they will respect me and treat me just as well as I treat them."
+    },
+    {
+      "id": 26,
+      "text": "I should assume responsibility for how people feel and behave if they are close to me."
+    },
+    {
+      "id": 27,
+      "text": "If I criticize the way someone does something and they become angry or depressed, this means I have upset them."
+    },
+    {
+      "id": 28,
+      "text": "To be a good, worthwhile, moral person, I must try to help everyone who needs it."
+    },
+    {
+      "id": 29,
+      "text": "If a child is having emotional or behavioral difficulties, this shows that the child's parents have failed in some important respect."
+    },
+    {
+      "id": 30,
+      "text": "I should be able to please everybody."
+    },
+    {
+      "id": 31,
+      "text": "I cannot expect to control how I feel when something bad happens."
+    },
+    {
+      "id": 32,
+      "text": "There is no point in trying to change upsetting emotions because they are a valid and inevitable part of daily living."
+    },
+    {
+      "id": 33,
+      "text": "My moods are primarily created by factors that are largely beyond my control, such as the past, or body chemistry, or hormone cycles, or biorhythms, or chance or fate."
+    },
+    {
+      "id": 34,
+      "text": "My happiness is largely dependent on what happens to me."
+    },
+    {
+      "id": 35,
+      "text": "People who have the marks of success (good looks, social status, wealth, or fame) are bound to be happier than those who do not."
+    }
+  ],
+  "domains": [
+    {
+      "id": "approval",
+      "items": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    {
+      "id": "love",
+      "items": [
+        6,
+        7,
+        8,
+        9,
+        10
+      ]
+    },
+    {
+      "id": "achievement",
+      "items": [
+        11,
+        12,
+        13,
+        14,
+        15
+      ]
+    },
+    {
+      "id": "perfectionism",
+      "items": [
+        16,
+        17,
+        18,
+        19,
+        20
+      ]
+    },
+    {
+      "id": "entitlement",
+      "items": [
+        21,
+        22,
+        23,
+        24,
+        25
+      ]
+    },
+    {
+      "id": "omnipotence",
+      "items": [
+        26,
+        27,
+        28,
+        29,
+        30
+      ]
+    },
+    {
+      "id": "autonomy",
+      "items": [
+        31,
+        32,
+        33,
+        34,
+        35
+      ]
+    }
+  ],
+  "bands": [],
+  "interpretation_limits": "A historical discussion profile, not a full original DAS or a diagnosis. Negative/positive domains do not establish causes of symptoms or complete personal control over mood.",
+  "presentation_policy": "Keep this single English canonical definition. Translate meaning, anchors and reference window for the conversation; record presentation language and retain the wording used. A conversational translation is not separately validated.",
+  "instructions": "Indicate your agreement with each statement according to how you think most of the time."
+}

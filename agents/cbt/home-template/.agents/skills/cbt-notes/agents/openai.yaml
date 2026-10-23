@@ -1,0 +1,3 @@
+interface:
+  display_name: "CBT Notes"
+  short_description: "Save and restore private local continuity records"

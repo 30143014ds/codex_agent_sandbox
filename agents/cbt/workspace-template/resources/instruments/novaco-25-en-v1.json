@@ -1,0 +1,190 @@
+{
+  "schema_version": 1,
+  "instrument_id": "novaco-25-en-v1",
+  "name": "Novaco Anger Inventory, 25-situation English book-compatible form",
+  "language": "en",
+  "source": {
+    "book": "David D. Burns, Feeling Good: The New Mood Therapy",
+    "chapter": 7,
+    "english_form_urls": [
+      "https://www.clintools.com/victims/resources/assessment/affect/nai25.html",
+      "https://themathersclinic.com/wp-content/uploads/2018/pdfs/Mathers-Clinic-Novaco-Anger-Inventory.pdf"
+    ],
+    "verification_date": "2026-10-23",
+    "provenance": "English reproductions cross-checked with the corresponding book items and scoring; no claim that a publisher-hosted first-edition facsimile was obtained.",
+    "normalization_notes": "Contractions and typography normalized; item 17 uses the clear agreed-task wording corroborated by the NAI-25 form. Retain original US units and dated situations; explain rather than replace. Do not copy the duplicate 3 anchor or past-week instruction found in one clinical mirror; the book and NAI-25 confirm 0–4 general imagined reactions."
+  },
+  "item_count": 25,
+  "scoring": "sum",
+  "answer_values": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "anchors": [
+    {
+      "value": 0,
+      "text": "You would feel very little or no annoyance"
+    },
+    {
+      "value": 1,
+      "text": "You would feel a little irritated"
+    },
+    {
+      "value": 2,
+      "text": "You would feel moderately upset"
+    },
+    {
+      "value": 3,
+      "text": "You would feel quite angry"
+    },
+    {
+      "value": 4,
+      "text": "You would feel very angry"
+    }
+  ],
+  "window": {
+    "type": "general_hypothetical_reaction",
+    "days": null
+  },
+  "safety_items": [],
+  "items": [
+    {
+      "id": 1,
+      "text": "You unpack an appliance you have just bought, plug it in, and discover that it does not work."
+    },
+    {
+      "id": 2,
+      "text": "Being overcharged by a repairman who has you over a barrel."
+    },
+    {
+      "id": 3,
+      "text": "Being singled out for correction, when the actions of others go unnoticed."
+    },
+    {
+      "id": 4,
+      "text": "Getting your car stuck in the mud or snow."
+    },
+    {
+      "id": 5,
+      "text": "You are talking to someone and they do not answer you."
+    },
+    {
+      "id": 6,
+      "text": "Someone pretends to be something they are not."
+    },
+    {
+      "id": 7,
+      "text": "While you are struggling to carry four cups of coffee to your table at a cafeteria, someone bumps into you, spilling the coffee."
+    },
+    {
+      "id": 8,
+      "text": "You have hung up your clothes, but someone knocks them to the floor and fails to pick them up."
+    },
+    {
+      "id": 9,
+      "text": "You are hounded by a salesperson from the moment that you walk into a store."
+    },
+    {
+      "id": 10,
+      "text": "You have made arrangements to go somewhere with a person who backs off at the last minute and leaves you hanging."
+    },
+    {
+      "id": 11,
+      "text": "Being joked about or teased."
+    },
+    {
+      "id": 12,
+      "text": "Your car is stalled at a traffic light, and the guy behind you keeps blowing his horn."
+    },
+    {
+      "id": 13,
+      "text": "You accidentally make the wrong kind of turn in a parking lot. As you get out of your car someone yells at you, \"Where did you learn to drive?\""
+    },
+    {
+      "id": 14,
+      "text": "Someone makes a mistake and blames it on you."
+    },
+    {
+      "id": 15,
+      "text": "You are trying to concentrate, but a person near you is tapping their foot."
+    },
+    {
+      "id": 16,
+      "text": "You lend someone an important book or tool and they fail to return it."
+    },
+    {
+      "id": 17,
+      "text": "You have had a busy day, and the person you live with starts to complain about how you forgot to do something you agreed to do."
+    },
+    {
+      "id": 18,
+      "text": "You are trying to discuss something important with your mate or partner who is not giving you a chance to express your feelings."
+    },
+    {
+      "id": 19,
+      "text": "You are in a discussion with someone who persists in arguing about a topic they know very little about."
+    },
+    {
+      "id": 20,
+      "text": "Someone sticks his or her nose into an argument between you and someone else."
+    },
+    {
+      "id": 21,
+      "text": "You need to get somewhere quickly, but the car in front of you is going 25 mph in a 40 mph zone, and you cannot pass."
+    },
+    {
+      "id": 22,
+      "text": "Stepping on a gob of chewing gum."
+    },
+    {
+      "id": 23,
+      "text": "Being mocked by a small group of people as you pass them."
+    },
+    {
+      "id": 24,
+      "text": "In a hurry to get somewhere, you tear a good pair of slacks on a sharp object."
+    },
+    {
+      "id": 25,
+      "text": "You use your last quarter to make a phone call, but you are disconnected before you finish dialing and the quarter is lost."
+    }
+  ],
+  "bands": [
+    {
+      "min": 0,
+      "max": 45,
+      "id": "very_low_book_range",
+      "label": "Very low irritability in the book's reference ranges"
+    },
+    {
+      "min": 46,
+      "max": 55,
+      "id": "below_average_book_range",
+      "label": "Below the book's reference average"
+    },
+    {
+      "min": 56,
+      "max": 75,
+      "id": "average_book_range",
+      "label": "Within the book's reference average range"
+    },
+    {
+      "min": 76,
+      "max": 85,
+      "id": "above_average_book_range",
+      "label": "Above the book's reference average"
+    },
+    {
+      "min": 86,
+      "max": 100,
+      "id": "very_high_book_range",
+      "label": "Very high irritability in the book's reference ranges"
+    }
+  ],
+  "interpretation_limits": "Historical book descriptions, not contemporary population percentiles, aggression predictions or a modern full NAS-PI. Dated scenarios are retained for version consistency.",
+  "presentation_policy": "Keep this single English canonical definition. Translate meaning, anchors and reference window for the conversation; record presentation language and retain the wording used. A conversational translation is not separately validated.",
+  "instructions": "Imagine each situation happening to you and rate your general degree of anger or annoyance. Give one response per situation."
+}

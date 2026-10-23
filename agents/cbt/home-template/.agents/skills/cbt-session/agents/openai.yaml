@@ -1,0 +1,3 @@
+interface:
+  display_name: "CBT Session"
+  short_description: "Start or resume a collaborative CBT conversation"

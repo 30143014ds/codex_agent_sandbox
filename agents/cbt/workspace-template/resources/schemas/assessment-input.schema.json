@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Input to score/save-assessment",
+  "type": "object",
+  "required": ["instrument_id", "status", "answers"],
+  "properties": {
+    "instrument_id": {"enum": ["burns-depression-25-en-v1", "novaco-25-en-v1", "das-burns-35-en-v1"]},
+    "status": {"enum": ["completed", "partial", "declined"]},
+    "answers": {"type": "array", "items": {"type": ["integer", "null"]}},
+    "recorded_at": {"type": "string", "format": "date-time"},
+    "attempt_id": {"type": "string", "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,119}$"},
+    "supersedes": {"type": ["string", "null"]},
+    "context": {"type": ["string", "null"]},
+    "window_start": {"type": ["string", "null"], "format": "date"},
+    "window_end": {"type": ["string", "null"], "format": "date"},
+    "presentation_language": {"type": "string", "pattern": "^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$", "default": "en"},
+    "presented_wording": {
+      "type": ["object", "null"],
+      "properties": {
+        "items": {"type": "object", "propertyNames": {"pattern": "^([1-9]|[12][0-9]|3[0-5])$"}, "additionalProperties": {"type": "string", "minLength": 1}},
+        "anchors": {"type": "array", "minItems": 5, "maxItems": 5, "items": {"type": "string", "minLength": 1}}
+      },
+      "required": ["anchors"],
+      "additionalProperties": false
+    }
+  },
+  "allOf": [
+    {"if": {"properties": {"instrument_id": {"const": "das-burns-35-en-v1"}}}, "then": {"properties": {"answers": {"minItems": 35, "maxItems": 35, "items": {"enum": [-2, -1, 0, 1, 2, null]}}}}, "else": {"properties": {"answers": {"minItems": 25, "maxItems": 25, "items": {"enum": [0, 1, 2, 3, 4, null]}}}}},
+    {"if": {"properties": {"status": {"const": "completed"}}}, "then": {"properties": {"answers": {"items": {"type": "integer"}}}}},
+    {"if": {"properties": {"status": {"const": "declined"}}}, "then": {"properties": {"answers": {"items": {"type": "null"}}}}}
+  ],
+  "additionalProperties": false,
+  "$comment": "Runtime additionally validates translation coverage, language, date windows, saved revision chains and matching instrument definitions."
+}

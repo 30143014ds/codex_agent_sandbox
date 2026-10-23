@@ -1,0 +1,201 @@
+{
+  "schema_version": 1,
+  "instrument_id": "burns-depression-25-en-v1",
+  "name": "Burns Depression Checklist, 25-item English form",
+  "language": "en",
+  "source": {
+    "book": "David D. Burns, Feeling Good: The New Mood Therapy",
+    "table": "2.1–2.2",
+    "form_revision": "1984, additions 1996",
+    "english_form_urls": [
+      "https://www.ssmhealth.com/getmedia/22ac22d5-0f2d-40c8-98bc-71a019d5d970/burns_depression_checklist.pdf",
+      "https://www.arlingtonphysicians.com/pdf/internal/BurnsDepressionChecklist.pdf"
+    ],
+    "verification_date": "2026-10-23",
+    "provenance": "English reproductions cross-checked with the corresponding book items and scoring; no claim that a publisher-hosted first-edition facsimile was obtained.",
+    "chapter": 2
+  },
+  "item_count": 25,
+  "scoring": "sum",
+  "answer_values": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "anchors": [
+    {
+      "value": 0,
+      "text": "Not at all"
+    },
+    {
+      "value": 1,
+      "text": "Somewhat"
+    },
+    {
+      "value": 2,
+      "text": "Moderately"
+    },
+    {
+      "value": 3,
+      "text": "A lot"
+    },
+    {
+      "value": 4,
+      "text": "Extremely"
+    }
+  ],
+  "window": {
+    "type": "past_week_including_today",
+    "days": 7
+  },
+  "safety_items": [
+    23,
+    24,
+    25
+  ],
+  "items": [
+    {
+      "id": 1,
+      "text": "Feeling sad or down in the dumps"
+    },
+    {
+      "id": 2,
+      "text": "Feeling unhappy or blue"
+    },
+    {
+      "id": 3,
+      "text": "Crying spells or tearfulness"
+    },
+    {
+      "id": 4,
+      "text": "Feeling discouraged"
+    },
+    {
+      "id": 5,
+      "text": "Feeling hopeless"
+    },
+    {
+      "id": 6,
+      "text": "Low self-esteem"
+    },
+    {
+      "id": 7,
+      "text": "Feeling worthless or inadequate"
+    },
+    {
+      "id": 8,
+      "text": "Guilt or shame"
+    },
+    {
+      "id": 9,
+      "text": "Criticizing yourself or blaming yourself"
+    },
+    {
+      "id": 10,
+      "text": "Difficulty making decisions"
+    },
+    {
+      "id": 11,
+      "text": "Loss of interest in family, friends, or colleagues"
+    },
+    {
+      "id": 12,
+      "text": "Loneliness"
+    },
+    {
+      "id": 13,
+      "text": "Spending less time with family or friends"
+    },
+    {
+      "id": 14,
+      "text": "Loss of motivation"
+    },
+    {
+      "id": 15,
+      "text": "Loss of interest in work or other activities"
+    },
+    {
+      "id": 16,
+      "text": "Avoiding work or other activities"
+    },
+    {
+      "id": 17,
+      "text": "Loss of pleasure or satisfaction in life"
+    },
+    {
+      "id": 18,
+      "text": "Feeling tired"
+    },
+    {
+      "id": 19,
+      "text": "Difficulty sleeping or sleeping too much"
+    },
+    {
+      "id": 20,
+      "text": "Decreased or increased appetite"
+    },
+    {
+      "id": 21,
+      "text": "Loss of interest in sex"
+    },
+    {
+      "id": 22,
+      "text": "Worrying about your health"
+    },
+    {
+      "id": 23,
+      "text": "Do you have any suicidal thoughts?"
+    },
+    {
+      "id": 24,
+      "text": "Do you want to end your life?"
+    },
+    {
+      "id": 25,
+      "text": "Do you have a plan for harming yourself?"
+    }
+  ],
+  "bands": [
+    {
+      "min": 0,
+      "max": 5,
+      "id": "no_depression_book_range",
+      "label": "No-depression range in the book"
+    },
+    {
+      "min": 6,
+      "max": 10,
+      "id": "normal_unhappy_book_range",
+      "label": "Normal but unhappy range in the book"
+    },
+    {
+      "min": 11,
+      "max": 25,
+      "id": "mild_book_range",
+      "label": "Mild range in the book"
+    },
+    {
+      "min": 26,
+      "max": 50,
+      "id": "moderate_book_range",
+      "label": "Moderate range in the book"
+    },
+    {
+      "min": 51,
+      "max": 75,
+      "id": "severe_book_range",
+      "label": "Severe range in the book"
+    },
+    {
+      "min": 76,
+      "max": 100,
+      "id": "extreme_book_range",
+      "label": "Extreme range in the book"
+    }
+  ],
+  "interpretation_limits": "Historical book screening bands, not a diagnosis or suicide-risk prediction. English anchors measure degree, not frequency. Translation may limit comparability.",
+  "presentation_policy": "Keep this single English canonical definition. Translate meaning, anchors and reference window for the conversation; record presentation language and retain the wording used. A conversational translation is not separately validated.",
+  "instructions": "Indicate how much you have experienced each symptom during the past week, including today. Answer all 25 items."
+}
