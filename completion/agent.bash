@@ -29,7 +29,7 @@ _codex_agent_complete() {
 
   if (( COMP_CWORD == 1 )); then
     mapfile -t COMPREPLY < <(
-      compgen -W "create start attach shell logs stop down status list help" \
+      compgen -W "create start attach shell logs stop down rename status list help" \
         -- "${current}"
     )
     return
@@ -58,7 +58,7 @@ _codex_agent_complete() {
           ;;
       esac
       ;;
-    start|attach|shell|logs|stop|down|status)
+    start|attach|shell|logs|stop|down|rename|status)
       if (( COMP_CWORD == 2 )); then
         mapfile -t COMPREPLY < <(
           compgen -W "$(_codex_agent_instances)" -- "${current}"

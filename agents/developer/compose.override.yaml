@@ -16,6 +16,7 @@ services:
       - "${DEV_BIND_IP:-127.0.0.1}:${DEV_HTTP_PORT:-18080}:80"
       - "${DEV_BIND_IP:-127.0.0.1}:${DEV_HTTPS_PORT:-18443}:443"
       - "${DEV_BIND_IP:-127.0.0.1}:${DEV_ADMINER_PORT:-18081}:8080"
+      - "${DEV_BIND_IP:-127.0.0.1}:${DEV_APP_PORT:-18000}:8000"
     healthcheck:
       test: ["CMD", "docker", "info"]
       interval: 5s

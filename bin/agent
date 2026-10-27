@@ -17,6 +17,7 @@ Usage:
   ./bin/agent logs <instance>
   ./bin/agent stop <instance>
   ./bin/agent down <instance>
+  ./bin/agent rename <instance> <new-name>
   ./bin/agent status [instance]
 
 Examples:
@@ -68,9 +69,14 @@ load_instance() {
 
   [[ -n "$(read_env_value "${INSTANCE_ENV}" INSTANCE_HOME_PATH)" ]] \
     || fail "instance '${instance}' uses the old layout; create a new instance"
+  AGENT_INSTANCE="$(read_env_value "${INSTANCE_ENV}" AGENT_INSTANCE)"
+  [[ -n "${AGENT_INSTANCE}" ]] || fail "AGENT_INSTANCE is missing in ${INSTANCE_ENV}"
+  export AGENT_INSTANCE AGENT_TYPE
   AGENT_OVERRIDE="${INSTANCE_DIR}/compose.override.yaml"
 
-  PROJECT_NAME="codex-${instance}"
+  PROJECT_NAME="$(read_env_value "${INSTANCE_ENV}" COMPOSE_PROJECT_NAME)"
+  PROJECT_NAME="${PROJECT_NAME:-codex-${instance}}"
+  require_name "${PROJECT_NAME}" "Compose project name"
 }
 
 compose_for_instance() {
@@ -84,6 +90,17 @@ compose_for_instance() {
     args+=(--file "${AGENT_OVERRIDE}")
   fi
   "${args[@]}" "$@"
+}
+
+project_name_in_use() {
+  local requested="$1" file project instance
+  for file in "${INSTANCES_DIR}"/*/instance.env; do
+    [[ -f "${file}" ]] || continue
+    instance="$(basename "$(dirname "${file}")")"
+    project="$(read_env_value "${file}" COMPOSE_PROJECT_NAME)"
+    [[ "${project:-codex-${instance}}" != "${requested}" ]] || return 0
+  done
+  return 1
 }
 
 list_all() {
@@ -136,10 +153,16 @@ create_instance() {
 
   local type_dir="${AGENTS_DIR}/${type}"
   [[ -d "${type_dir}" ]] || fail "unknown agent type '${type}'"
-  [[ ! -e "${INSTANCES_DIR}/${instance}" ]] || fail "instance '${instance}' already exists"
+  [[ ! -e "${INSTANCES_DIR}/${instance}" && ! -L "${INSTANCES_DIR}/${instance}" ]] \
+    || fail "instance '${instance}' already exists"
 
   local instance_dir="${INSTANCES_DIR}/${instance}"
   local instance_home="${instance_dir}/home"
+  local project_name="codex-${instance}" suffix=2
+  while project_name_in_use "${project_name}"; do
+    project_name="codex-${instance}-${suffix}"
+    (( suffix += 1 ))
+  done
   local workspace_path
   local launcher_owned_workspace=false
   if [[ -n "${requested_workspace}" ]]; then
@@ -179,6 +202,7 @@ create_instance() {
   cat >"${instance_dir}/instance.env" <<EOF
 AGENT_TYPE=${type}
 AGENT_INSTANCE=${instance}
+COMPOSE_PROJECT_NAME=${project_name}
 HOST_UID=$(id -u)
 HOST_GID=$(id -g)
 INSTANCE_HOME_PATH=${instance_home}
@@ -187,6 +211,7 @@ DEV_BIND_IP=127.0.0.1
 DEV_HTTP_PORT=18080
 DEV_HTTPS_PORT=18443
 DEV_ADMINER_PORT=18081
+DEV_APP_PORT=18000
 EOF
   chmod 600 "${instance_dir}/instance.env"
 
@@ -194,6 +219,74 @@ EOF
   echo "Workspace: ${workspace_path}"
   echo "Start:     ./bin/agent start ${instance}"
 }
+
+rename_instance() (
+  (( $# == 2 )) || { usage; exit 2; }
+  local instance="$1" new_name="$2"
+  require_name "${new_name}" "new instance name"
+  [[ "${instance}" != "${new_name}" ]] || fail "new instance name must differ"
+  load_instance "${instance}"
+
+  local new_dir="${INSTANCES_DIR}/${new_name}"
+  [[ ! -L "${INSTANCE_DIR}" ]] || fail "cannot rename a symlink instance directory"
+  [[ ! -e "${new_dir}" && ! -L "${new_dir}" ]] \
+    || fail "instance '${new_name}' already exists"
+
+  local containers
+  containers="$(docker ps --all --quiet \
+    --filter "label=com.docker.compose.project=${PROJECT_NAME}")"
+  [[ -z "${containers}" ]] \
+    || fail "run './bin/agent down ${instance}' before rename (stopped containers also count)"
+
+  # Moving an instance directory must not invalidate another instance's mounts.
+  local file key value
+  for file in "${INSTANCES_DIR}"/*/instance.env; do
+    [[ -f "${file}" && "${file}" != "${INSTANCE_ENV}" ]] || continue
+    for key in INSTANCE_HOME_PATH WORKSPACE_PATH; do
+      value="$(read_env_value "${file}" "${key}")"
+      if [[ "${value}" == "${INSTANCE_DIR}" || "${value}" == "${INSTANCE_DIR}/"* ]]; then
+        fail "${key} in ${file} refers to this instance; update that path and recreate its container before rename"
+      fi
+    done
+  done
+
+  local rename_temp line project_written=false
+  rename_temp="$(mktemp "${INSTANCES_DIR}/.rename.XXXXXX")"
+  trap 'rm -f -- "${rename_temp}"' EXIT
+  while IFS= read -r line || [[ -n "${line}" ]]; do
+    case "${line}" in
+      AGENT_INSTANCE=*)
+        line="AGENT_INSTANCE=${new_name}"
+        ;;
+      COMPOSE_PROJECT_NAME=*)
+        line="COMPOSE_PROJECT_NAME=${PROJECT_NAME}"
+        project_written=true
+        ;;
+      INSTANCE_HOME_PATH=*|WORKSPACE_PATH=*)
+        key="${line%%=*}"
+        value="${line#*=}"
+        if [[ "${value}" == "${INSTANCE_DIR}" || "${value}" == "${INSTANCE_DIR}/"* ]]; then
+          line="${key}=${new_dir}${value#"${INSTANCE_DIR}"}"
+        fi
+        ;;
+    esac
+    printf '%s\n' "${line}"
+  done <"${INSTANCE_ENV}" >"${rename_temp}"
+  if [[ "${project_written}" == false ]]; then
+    printf 'COMPOSE_PROJECT_NAME=%s\n' "${PROJECT_NAME}" >>"${rename_temp}"
+  fi
+
+  mv -T -- "${INSTANCE_DIR}" "${new_dir}"
+  if ! mv -f -- "${rename_temp}" "${new_dir}/instance.env"; then
+    mv -T -- "${new_dir}" "${INSTANCE_DIR}" \
+      || fail "could not restore instance directory after failed rename"
+    fail "could not update instance.env; original instance restored"
+  fi
+
+  echo "Renamed '${instance}' to '${new_name}'."
+  echo "Docker project retained: ${PROJECT_NAME}"
+  echo "Start: ./bin/agent start ${new_name}"
+)
 
 status_all() {
   local found=false
@@ -218,9 +311,18 @@ main() {
     create)
       create_instance "${@:2}"
       ;;
+    rename)
+      rename_instance "${@:2}"
+      ;;
     start)
       load_instance "${2:-}"
+      local container_id
+      container_id="$(compose_for_instance ps --all --quiet agent)"
+      if [[ -n "${container_id}" ]]; then
+        compose_for_instance start --wait --wait-timeout 90
+      else
       compose_for_instance up -d --build --wait --wait-timeout 90
+      fi
       ;;
     attach)
       load_instance "${2:-}"
